@@ -577,23 +577,12 @@ func WsCombinedMarketTickerServe(symbol []string, handler WsMarketTickerHandler,
 	endpoint := baseUrl + tmp
 	cfg := newWsConfig(endpoint)
 	wsHandler := func(message []byte) {
-		j, err := newJSON(message)
-		if err != nil {
-			errHandler(err)
-			return
-		}
-
-		data := j.Get("data").MustMap()
-
-		jsonData, _ := json.Marshal(data)
-
 		event := new(WsMarketTickerEvent)
-		err = json.Unmarshal(jsonData, event)
+		err := json.Unmarshal(message, &event)
 		if err != nil {
 			errHandler(err)
 			return
 		}
-
 		handler(event)
 	}
 
