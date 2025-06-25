@@ -432,26 +432,6 @@ func WsMarketTickerServe(symbol string, handler WsMarketTickerHandler, errHandle
 	return wsServe(cfg, wsHandler, errHandler)
 }
 
-func WsCombinedMarketTickerServe(symbol []string, handler WsAllMarketTickerHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
-	baseUrl := getWsEndpoint()
-	var tmp string
-	for _, symbol := range symbol {
-		tmp = tmp + fmt.Sprintf("/%s@ticker", strings.ToLower(symbol))
-	}
-	endpoint := baseUrl + tmp
-	cfg := newWsConfig(endpoint)
-	wsHandler := func(message []byte) {
-		var event WsAllMarketTickerEvent
-		err := json.Unmarshal(message, &event)
-		if err != nil {
-			errHandler(err)
-			return
-		}
-		handler(event)
-	}
-	return wsServe(cfg, wsHandler, errHandler)
-}
-
 // WsAllMarketTickerEvent define an array of websocket mini ticker events.
 type WsAllMarketTickerEvent []*WsMarketTickerEvent
 

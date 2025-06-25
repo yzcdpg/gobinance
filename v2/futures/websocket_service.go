@@ -568,6 +568,38 @@ func WsAllMarketTickerServe(handler WsAllMarketTickerHandler, errHandler ErrHand
 	return wsServe(cfg, wsHandler, errHandler)
 }
 
+func WsCombinedMarketTickerServe(symbol []string, handler WsMarketTickerHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+	baseUrl := getWsEndpoint()
+	var tmp string
+	for _, symbol := range symbol {
+		tmp = tmp + fmt.Sprintf("/%s@ticker", strings.ToLower(symbol))
+	}
+	endpoint := baseUrl + tmp
+	cfg := newWsConfig(endpoint)
+	wsHandler := func(message []byte) {
+		j, err := newJSON(message)
+		if err != nil {
+			errHandler(err)
+			return
+		}
+
+		data := j.Get("data").MustMap()
+
+		jsonData, _ := json.Marshal(data)
+
+		event := new(WsMarketTickerEvent)
+		err = json.Unmarshal(jsonData, event)
+		if err != nil {
+			errHandler(err)
+			return
+		}
+
+		handler(event)
+	}
+
+	return wsServe(cfg, wsHandler, errHandler)
+}
+
 // WsBookTickerEvent define websocket best book ticker event.
 type WsBookTickerEvent struct {
 	Event           string `json:"e"`
